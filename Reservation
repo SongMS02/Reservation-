@@ -1,0 +1,882 @@
+#include <algorithm>
+#include <cmath>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+// Create function
+void welcomeLogo();
+void menu();
+void reservation();
+void bookingReceipt(int, int, int, string, string);
+void userDetail();
+void dailyView();
+void userBookingInfo(int, int, int, string, int);
+void endingLogo();
+void writeFile(string fileName, int num);
+void readFile(string fileName, int num);
+
+bool isNumber(const string& str);
+
+string array_day[7] = { "monday", "tuesday",  "wednesday", "thursday",
+                       "friday", "saturday", "sunday" };
+string array_day_short[7] = { "mon", "tue", "wed", "thu", "fri", "sat", "sun" };
+int array_time[12] = { 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+string array_ampm[2] = { "am", "pm" };
+int array_court[7][12] = {
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} };
+string array_name_mon[12][6], array_name_tue[12][6], array_name_wed[12][6],
+array_name_thu[12][6], array_name_fri[12][6], array_name_sat[12][6],
+array_name_sun[12][6];
+long int array_phonenum_mon[12][6], array_phonenum_tue[12][6],
+array_phonenum_wed[12][6], array_phonenum_thu[12][6],
+array_phonenum_fri[12][6], array_phonenum_sat[12][6],
+array_phonenum_sun[12][6];
+
+//structure
+typedef struct Booking {
+    int day;
+    string name;
+    int phoneNum;
+    int time;
+    int courtNum;
+} Booking;
+
+Booking bookings[100];
+int bookingCount = 0;
+int bookingIndex = 0;
+
+int main() {
+    string fileNames[7] = { "Monday.txt",   "Tuesday.txt", "Wednesday.txt",
+                           "Thursday.txt", "Friday.txt",  "Saturday.txt",
+                           "Sunday.txt" };
+
+    for (int i = 0; i < 7; i++) {
+        readFile(fileNames[i], i + 1);
+    }
+
+    //call the menu function
+    menu();
+
+    // print out details of txt file
+    for (int i = 0; i < bookingCount; i++) {
+        writeFile(fileNames[bookings[i].day - 1], bookings[i].day);
+    }
+
+    return 0;
+}
+
+void welcomeLogo() { //display welcomeLogo
+    cout << endl;
+    cout << setw(88) << "Welcome to " << endl;
+    cout << "\t\t\t\t\t" << "=================================================================================" << endl;
+    cout << "\t\t\t\t\t" << "||" << setw(79) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t ___  ___  ____      " << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t|\\   _\\|\\   _  \\|\\   __\\     " << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t\\ \\  \\__|\\ \\  \\|\\  \\ \\  \\_|    " << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t \\ \\___  \\ \\  \\\\\\  \\ \\___  \\   " << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t  \\|_|\\  \\ \\  \\\\\\  \\|_|\\  \\  " << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t    _\\\\  \\ \\___\\__\\_\\  \\ " << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t   |\\____\\|__|\\_____\\" << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t   \\|___|        \\|___|" << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << setw(79) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << setw(57) << "Site Of Sport Badminton Complex" << setw(23) << "|| " << endl;
+    cout << "\t\t\t\t\t" << "=================================================================================" << endl << endl;
+    cout << setw(90) << "Reservation System" << endl << endl;
+}
+
+void menu() {
+    int loop = 1;
+    string input_respond;
+    int respond;
+    do {//repeat to call the function
+
+    //start the program with call the welcomeLogo function 
+        welcomeLogo();
+
+        //display menu
+        cout << "\t\t\t\t\t" << "---------------------------------------MENU--------------------------------------" << endl;
+        cout << "\t\t\t\t\t" << "1. Booking" << endl;
+        cout << "\t\t\t\t\t" << "2. View Customer's Detail" << endl;
+        cout << "\t\t\t\t\t" << "3. View Daily's Detail" << endl;
+        cout << "\t\t\t\t\t" << "4. Exit" << endl << endl;
+
+        //prompt and get the input_respond in string to run each part function
+        cout << "\t\t\t\t\t" << "Enter (1-4) for the following function: ";
+        cin >> input_respond;
+
+        //if input_respond is not an integer, display invalid message
+        while (!isNumber(input_respond)) {
+            cout << "\t\t\t\t\t" << "Invalid, please enter again!\n\n\t\t\t\t\tEnter (1-4) for the following function: ";
+            cin >> input_respond;
+        }
+        //if input_respond is an integer, let respond equal to input_respond and string will be changed to integer
+        respond = stoi(input_respond);
+
+        switch (respond) {
+        case 1:
+            //call the customer's reservation system function
+            system("cls");
+            cout << endl;
+            reservation();
+            break;
+
+        case 2:
+            //call the customer's reservation detail function
+            system("cls");
+            cout << endl;
+            userDetail();
+            break;
+
+        case 3:
+            //call the daily's reservation details function
+            system("cls");
+            cout << endl;
+            dailyView();
+            break;
+
+        case 4:
+            //end the program with display ending logo
+            system("cls");
+            endingLogo();
+            loop = 0;
+            cout << endl << endl << endl;
+            break;
+
+        default:
+            //the number is not available, display invalid message and ask to input again
+            cout << "\t\t\t\t\tInvalid, please enter the number that are available in the following menu.\n\n";
+            system("pause");
+            system("cls");
+            break;
+        }
+    } while (loop == 1);
+}
+
+bool isNumber(const string& str) { //isNumber is an integer then return true, if not an integer return false
+    for (char const& c : str)
+        if (isdigit(c) == 0)
+            return false;
+
+    return true;
+}
+
+void reservation() { // staff input customer's reservation details
+    int loop_day = 1, loop_time = 1;
+    char ch = ' ';
+    string input_day, input_name, input_time, input_phone;
+    int time, int_input_day;
+    int index_day, index_time, index_court;
+
+    while (loop_day == 1) {
+        //display table of day, prompt and get the number or name of day
+        cout << "\t\t\t\t\tDay\n";
+        cout << "\t\t\t\t\t------------------\n";
+        cout << "\t\t\t\t\t1. Monday\n";
+        cout << "\t\t\t\t\t2. Tuesday\n";
+        cout << "\t\t\t\t\t3. Wednesday\n";
+        cout << "\t\t\t\t\t4. Thursday\n";
+        cout << "\t\t\t\t\t5. Friday\n";
+        cout << "\t\t\t\t\t6. Saturday\n";
+        cout << "\t\t\t\t\t7. Sunday\n\n";
+        cout << "\t\t\t\t\tChoose the day for booking : ";
+        cin >> input_day;
+
+        //change the input_day into small letters, check whether the input_day is available
+        transform(input_day.begin(), input_day.end(), input_day.begin(), tolower);
+        //input_day is word and check whether it is available day (monday to sunday)
+        for (int i = 0; i < 7; i++) {
+            if (input_day == array_day[i]) {
+                index_day = i;
+                loop_day = 0;
+            }
+            else if (input_day == array_day_short[i]) {
+                index_day = i;
+                loop_day = 0;
+            }
+            //if input_day is available will make a reservation 
+        }
+        if (loop_day == 1) {
+            if (!isNumber(input_day)) {
+                //if input_day is not an integer or day, display invalid message and ask to input again
+                cout << "\t\t\t\t\tInvalid. Please enter again!\n\n";
+                system("pause");
+                system("cls");
+            }
+            else if (isNumber(input_day)) {
+                //if input_day is an integer, let int_input_day equal to input_day and string will be changed into integer
+                int_input_day = stoi(input_day);
+                //if input_day is an integer, check whether it is smaller and equal to 7 or larger and equal to 1
+                if (int_input_day >= 1 || int_input_day <= 7) {
+                    //the integer is in the range
+                    index_day = int_input_day - 1;
+                    loop_day = 0;
+                }
+                else {
+                    //the integer is not in the range, display invalid message and ask to input again
+                    cout << "\t\t\t\t\tInvalid. Please enter again!\n\n";
+                    system("pause");
+                    system("cls");
+                }
+            }
+            else {
+                //input_day is not available, display invalid message and ask to input again
+                cout << "\t\t\t\t\tInvalid. Please enter again!\n\n";
+                system("pause");
+                system("cls");
+            }
+        }
+    }
+
+        //display table of available court
+        cout << endl;
+        cout << "\t\t\t\t\t\t\t\tTable of available court\n\n";
+        cout << "\t\t\t-------------------------------------------------------------------------------------------------------------\n";
+        cout << "\t\t\tTime\t\t";
+        for (int a = 0; a < 12; a++) {
+            cout << setw(2) << array_time[a] << " ";
+            if (a < 2) {
+                cout << array_ampm[0] << "   ";
+            }
+            else {
+                cout << array_ampm[1] << "   ";
+            }
+        }
+        cout << endl;
+        cout << "\n\t\t\tTotal court\t";
+        for (int a = 0; a < 12; a++) {
+            cout << " " << 6 - array_court[index_day][a] << "      ";
+        }
+
+        //prompt and get input_time
+        while (loop_time == 1) {
+            cout << endl << endl;
+            cout << "\t\t\t\t\tChoose the time for booking (*no need include am/pm) :  ";
+            cin >> input_time;
+
+            //check whether input_time is an integer
+            while (!isNumber(input_time)) {
+                //input_time is not an integer, display invalid message and ask to input again
+                cout << "\t\t\t\t\tInvalid, please enter again!\n\n\t\t\t\t\tChoose the time for booking (*no need include am/pm) : ";
+                cin >> input_time;
+            }
+
+            //if input_time is an integer, let time equal to input_time and string will be changed into integer
+            time = stoi(input_time);
+
+            //check whether time is less than 1 or large than 12
+            if (time > 12 || time < 1) {
+                //time is not in the range, display invalid message and ask to input again
+                cout << "\t\t\t\t\tInvalid, the time is not available.";
+                loop_time = 1;
+            }
+
+            else {
+                // time is in the range
+                for (int i = 0; i < 12; i++) {
+                    if (time == array_time[i]) {
+                        index_time = i;
+                    }
+                }
+                loop_time = 0;
+                //check empty court in that time
+                if ((array_court[index_day][index_time]) == 6) {
+                    //when the court is full, display message and ask to input other time
+                    cout << "\t\t\t\t\tThe courts are full. Please enter other day or time.";
+                    loop_time = 1;
+                }
+            }
+        }
+
+        //prompt and get name
+        cout << "\t\t\t\t\tEnter the customer's name: ";
+        cin.get(ch);
+        getline(cin, input_name);
+
+        //prompt and get phone number
+        cout << "\t\t\t\t\tEnter the customer's phone number: ";
+        getline(cin, input_phone);
+        //check the format of phone number, must be more than 10 digits
+        //check whether the format of s_phonenum is more than 10 digits and in integer only
+        while (input_phone.length() < 10 || !isNumber(input_phone))
+        {
+            //s_phonenum is too short or not integer, display invalid message and ask to input again
+            cout << "\t\t\t\t\tInvalid, the phone number must in 10 digits integer! \n\n\t\t\t\t\tEnter phone number: ";
+            cin >> input_phone;
+
+        }
+
+        //print out the receipt for each day
+        switch (index_day) {
+        case 0: //monday
+            array_court[index_day][index_time] += 1;
+            index_court = array_court[index_day][index_time];
+            array_name_mon[index_time][index_court - 1] = input_name;
+            array_phonenum_mon[index_time][index_court - 1] = stoi(input_phone);
+
+            bookingReceipt(index_day, index_time, index_court, input_name, input_phone);
+            break;
+        case 1: //tuesday
+            array_court[index_day][index_time] += 1;
+            index_court = array_court[index_day][index_time];
+            array_name_tue[index_time][index_court - 1] = input_name;
+            array_phonenum_tue[index_time][index_court - 1] = stoi(input_phone);
+
+            bookingReceipt(index_day, index_time, index_court, input_name, input_phone);
+            break;
+        case 2: //wednesday
+            array_court[index_day][index_time] += 1;
+            index_court = array_court[index_day][index_time];
+            array_name_wed[index_time][index_court - 1] = input_name;
+            array_phonenum_wed[index_time][index_court - 1] = stoi(input_phone);
+
+            bookingReceipt(index_day, index_time, index_court, input_name, input_phone);
+            break;
+        case 3: //thursday
+            array_court[index_day][index_time] += 1;
+            index_court = array_court[index_day][index_time];
+            array_name_thu[index_time][index_court - 1] = input_name;
+            array_phonenum_thu[index_time][index_court - 1] = stoi(input_phone);
+
+            bookingReceipt(index_day, index_time, index_court, input_name, input_phone);
+            break;
+        case 4: //friday
+            array_court[index_day][index_time] += 1;
+            index_court = array_court[index_day][index_time];
+            array_name_fri[index_time][index_court - 1] = input_name;
+            array_phonenum_fri[index_time][index_court - 1] = stoi(input_phone);
+
+            bookingReceipt(index_day, index_time, index_court, input_name, input_phone);
+            break;
+        case 5: //saturday
+            array_court[index_day][index_time] += 1;
+            index_court = array_court[index_day][index_time];
+            array_name_sat[index_time][index_court - 1] = input_name;
+            array_phonenum_sat[index_time][index_court - 1] = stoi(input_phone);
+
+            bookingReceipt(index_day, index_time, index_court, input_name, input_phone);
+            break;
+        case 6: //sunday
+            array_court[index_day][index_time] += 1;
+            index_court = array_court[index_day][index_time];
+            array_name_sun[index_time][index_court - 1] = input_name;
+            array_phonenum_sun[index_time][index_court - 1] = stoi(input_phone);
+
+            bookingReceipt(index_day, index_time, index_court, input_name, input_phone);
+            break;
+        }
+        Booking booking;
+        booking.name = input_name;
+        booking.phoneNum = stoi(input_phone);
+        booking.courtNum = index_court;
+        booking.day = stoi(input_day);
+        booking.time = stoi(input_time);
+        bookings[bookingCount] = booking;
+        bookingCount++;
+    
+}
+
+void bookingReceipt(int index_day, int index_time, int index_court, string input_name, string input_phone)
+{
+    string day;
+    day = array_day[index_day];
+    day[0] = toupper(day[0]);
+
+    //table of receipt
+    system("cls");
+    cout << endl;
+    cout << "\t\t\t\t\tYour booking is complete, this is the details of your booking. \n";
+    cout << "\t\t\t\t\t--------------------------------------------------------------\n";
+    cout << "\t\t\t\t\tDay\t\t: " << day << endl;
+    cout << "\t\t\t\t\tTime\t\t: " << array_time[index_time] << " ";
+    if (index_time == 0 || index_time == 1) {
+        cout << array_ampm[0];
+    }
+    else {
+        cout << array_ampm[1];
+    }
+    cout << " (1 hour)" << endl;
+    cout << "\t\t\t\t\tCourt number\t: " << index_court << endl;
+    cout << "\t\t\t\t\tName\t\t: " << input_name << endl;
+    cout << "\t\t\t\t\tPhone\t\t: " << input_phone << endl;
+    cout << endl << endl;
+    system("pause");
+    system("cls");
+}
+
+void userDetail()
+{
+    int phonenum, loop = 1, num = 0;
+    string name, s_phonenum;
+
+    //prompt and get name
+    cout << "\t\t\t\t\tEnter customer name :";
+    cin.get();
+    getline(cin, name);
+
+    //prompt and get s_phonenum
+    cout << "\t\t\t\t\tEnter phone number: ";
+    getline(cin, s_phonenum);
+
+    //check whether the format of s_phonenum is more than 10 digits and in integer only
+    while (s_phonenum.length() < 10 || !isNumber(s_phonenum))
+    {
+        //s_phonenum is too short or not integer, display invalid message and ask to input again
+        cout << "\t\t\t\t\tInvalid, the phone number must in 10 digits integer! \n\n\t\t\t\t\tEnter phone number: ";
+        cin >> s_phonenum;
+
+    }
+    //change string into integer 
+    phonenum = stoi(s_phonenum);
+
+    cout << endl;
+    //find the records from array and display userBookingInfo function
+    do
+    {
+        for (int i = 0; i < 7; i++)
+        {
+            for (int j = 0; j < 12; j++)
+            {
+                for (int k = 0; k < 6; k++)
+                {
+                    if (i == 0 && name == array_name_mon[j][k] && phonenum == array_phonenum_mon[j][k])
+                    {
+                        userBookingInfo(i, j, k, name, phonenum);
+                        num += 1;
+                    }
+
+                    else if (i == 1 && name == array_name_tue[j][k] && phonenum == array_phonenum_tue[j][k])
+                    {
+                        userBookingInfo(i, j, k, name, phonenum);
+                        num += 1;
+                    }
+
+                    else if (i == 2 && name == array_name_wed[j][k] && phonenum == array_phonenum_wed[j][k])
+                    {
+                        userBookingInfo(i, j, k, name, phonenum);
+                        num += 1;
+                    }
+
+                    else if (i == 3 && name == array_name_thu[j][k] && phonenum == array_phonenum_thu[j][k])
+                    {
+                        userBookingInfo(i, j, k, name, phonenum);
+                        num += 1;
+                    }
+
+                    else if (i == 4 && name == array_name_fri[j][k] && phonenum == array_phonenum_fri[j][k])
+                    {
+                        userBookingInfo(i, j, k, name, phonenum);
+                        num += 1;
+                    }
+
+                    else if (i == 5 && name == array_name_sat[j][k] && phonenum == array_phonenum_sat[j][k])
+                    {
+                        userBookingInfo(i, j, k, name, phonenum);
+                        num += 1;
+                    }
+
+                    else if (i == 6 && name == array_name_sun[j][k] && phonenum == array_phonenum_sun[j][k])
+                    {
+                        userBookingInfo(i, j, k, name, phonenum);
+                        num += 1;
+                    }
+
+                    else
+                    {
+                        loop = 0;
+                        num += 0;
+                    }
+                }
+            }
+        }
+    } while (loop == 1);
+
+    if (num == 0) {
+        //when no records, display invalid message
+        cout << "\t\t\t\t\tNo booking found! Please check if infomation is correct or make sure booking is made. " << endl << endl;
+    }
+    else {
+        //after display the records, show the total of the booking
+        cout << "\n\t\t\t\t\tTotal : " << num << " booking(s). " << endl << endl;
+    }
+    system("pause");
+    system("cls");
+}
+
+void userBookingInfo(int i, int j, int k, string name, int phonenum) {
+    int time = array_time[j];
+    int court = k + 1;
+    string day;
+    day = array_day[i];
+    day[0] = toupper(day[0]);
+
+    //display table of a customer's reservation record
+    cout << "\t\t\t\t\t==========================================" << endl;
+    cout << "\t\t\t\t\tName          : " << name << endl;
+    cout << "\t\t\t\t\tPhone Number  : " << phonenum << endl;
+    cout << "\t\t\t\t\tBooking Day   : " << day << endl;
+    cout << "\t\t\t\t\tCourt Numuber : " << court << endl;
+    cout << "\t\t\t\t\tBooking Time  : " << time << " ";
+
+    if (time == 10 || time == 11) {
+        cout << array_ampm[0];
+    }
+    else {
+        cout << array_ampm[1];
+    }
+    cout << endl;
+}
+
+void endingLogo() { // display ending logo
+
+    cout << "\t\t\t\t\t" << "=================================================================================" << endl;
+    cout << "\t\t\t\t\t" << "||" << setw(79) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t ___  ___  ____      " << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t|\\   _\\|\\   _  \\|\\   __\\     " << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t\\ \\  \\__|\\ \\  \\|\\  \\ \\  \\_|    " << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t \\ \\___  \\ \\  \\\\\\  \\ \\___  \\   " << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t  \\|_|\\  \\ \\  \\\\\\  \\|_|\\  \\  " << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t    _\\\\  \\ \\___\\__\\_\\  \\ " << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t   |\\____\\|__|\\_____\\" << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << "\t\t\t   \\|___|        \\|___|" << setw(22) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << setw(79) << "||" << endl;
+    cout << "\t\t\t\t\t" << "||" << setw(57) << "Site Of Sport Badminton Complex" << setw(23) << "|| " << endl;
+    cout << "\t\t\t\t\t" << "=================================================================================" << endl << endl;
+    cout << right << setw(98) << "Thank you for using this program!" << endl;
+    cout << right << setw(100) << "The Booking records have been saved " << endl;
+    cout << right << setw(132) << "To view all the updated booking records made on this session on admin view please restart program " << endl;
+}
+
+void adminMenu() { //display staff menu
+
+    cout << "\t\t\t\t\t1. Monday" << endl;
+    cout << "\t\t\t\t\t2. Tuesday" << endl;
+    cout << "\t\t\t\t\t3. Wednesday" << endl;
+    cout << "\t\t\t\t\t4. Thursday" << endl;
+    cout << "\t\t\t\t\t5. Friday" << endl;
+    cout << "\t\t\t\t\t6. Saturday" << endl;
+    cout << "\t\t\t\t\t7. Sunday" << endl;
+    cout << "\t\t\t\t\t8. Exit" << endl;
+    cout << "\t\t\t\t\tPlease enter the number of day to view booking details or exit: ";
+}
+
+int searchTimeForIndex(string input) { //search time record
+    int time = stoi(input);
+    for (int i = 0; i < 12; i++) {
+        if (time == array_time[i])
+            return i;
+    }
+    return -1;
+}
+
+string generateTime(string input) { //display time record with included 'am' and 'pm'
+    int time = stoi(input);
+
+    for (int i = 0; i < 12; i++) {
+        if (time == array_time[i])
+            if (i > 1) {
+                return to_string(time) + "PM";
+            }
+            else {
+                return to_string(time) + "AM";
+            }
+    }
+    return "none";
+}
+
+void updateNameData(int day, int time, int courtNum, string name) { //update name from array
+
+    switch (day) {
+    case 1:
+        array_name_mon[time][courtNum] = name;
+        break;
+    case 2:
+        array_name_tue[time][courtNum] = name;
+        break;
+    case 3:
+        array_name_wed[time][courtNum] = name;
+        break;
+    case 4:
+        array_name_thu[time][courtNum] = name;
+        break;
+    case 5:
+        array_name_fri[time][courtNum] = name;
+        break;
+    case 6:
+        array_name_sat[time][courtNum] = name;
+        break;
+    case 7:
+        array_name_sun[time][courtNum] = name;
+        break;
+    }
+}
+
+void updatePhoneData(int day, int time, int courtNum, int phoneNum) { //updata phone from array
+
+    switch (day) {
+    case 1:
+        array_phonenum_mon[time][courtNum] = phoneNum;
+        break;
+    case 2:
+        array_phonenum_tue[time][courtNum] = phoneNum;
+        break;
+    case 3:
+        array_phonenum_wed[time][courtNum] = phoneNum;
+        break;
+    case 4:
+        array_phonenum_thu[time][courtNum] = phoneNum;
+        break;
+    case 5:
+        array_phonenum_fri[time][courtNum] = phoneNum;
+        break;
+    case 6:
+        array_phonenum_sat[time][courtNum] = phoneNum;
+        break;
+    case 7:
+        array_phonenum_sun[time][courtNum] = phoneNum;
+        break;
+    }
+}
+
+void dailyView() { //check everyday's record
+    int int_pwd;
+    int num = 0;
+    int looping = 1;
+    string pwd;
+    string day = "";
+    string fileName = "";
+    // key in password
+    cout << "\t\t\t\t\tEnter password: ";
+    //input password
+    cin >> pwd;
+    cout << endl;
+    system("cls");
+
+    while (num == 0) {
+        if (!isNumber(pwd)) {
+            //if pwd is not an integer , display invalid message and ask to input again
+            cout << "\t\t\t\t\t" << "Wrong password, please try again!" << endl;
+            cout << "\t\t\t\t\t" << "Enter password or Enter 1 to quit: ";
+
+            cin >> pwd;
+
+            system("cls");
+            if (pwd == "1") {
+                return;
+            }
+        }
+        else if (isNumber(pwd)) {
+            //if pwd is integer, check whether it is equal to 12345
+            int_pwd = stoi(pwd);
+            // if pwd is =12345
+            if (int_pwd == 12345) {
+                do {
+                    // display menu to choose which day to view
+                    adminMenu();
+                    string input;
+                    cin >> input;
+                    while (!isNumber(input)) {
+                        cout << "\t\t\t\t\tInvalid,please enter integer only.";
+                        adminMenu();
+                        cin >> input;
+                    }
+                    num = stoi(input);
+
+                    // validate the day, if num less than 1 or larger than 8 then display invalid message
+                    while (num < 1 || num > 8) {
+                        cout << "\t\t\t\t\tInvalid, please enter the integer that are available in the "
+                            "following selection.\n\n";
+                        adminMenu();
+                        cin >> num;
+                        cout << endl;
+
+                    }
+                    // convert number to day and open txt file
+                    switch (num) {
+                    case 1:
+                        day = "monday";
+                        fileName = "Monday.txt";
+                        break;
+
+                    case 2:
+                        day = "tuesday";
+                        fileName = "Tuesday.txt";
+                        break;
+
+                    case 3:
+                        day = "Wednesday";
+                        fileName = "Wednesday.txt";
+                        break;
+
+                    case 4:
+                        day = "Thursday";
+                        fileName = "Thursday.txt";
+                        break;
+
+                    case 5:
+                        day = "Friday";
+                        fileName = "Friday.txt";
+                        break;
+
+                    case 6:
+                        day = "Saturday";
+                        fileName = "Saturday.txt";
+                        break;
+
+                    case 7:
+                        day = "Sunday";
+                        fileName = "Sunday.txt";
+                        break;
+
+                    case 8:
+                        looping = 0;
+                        return;
+                        break;
+
+                    default:
+                        cout << "\t\t\t\t\t" << "Invalid, please enter the integer that are available in the "
+                            "following selection.\n\n";
+                        break;
+                    }
+                    // until the staff doesn't want to view the report
+
+                    // display record
+                    for (int i = 0; i < bookingCount; i++) {
+                        if (bookings[i].day == num) {
+                            cout << "\n\t\t\t\t\t" << "Booking day : " << bookings[i].day << endl;
+                            cout << "\t\t\t\t\t" << "Name        : " << bookings[i].name << endl;
+                            cout << "\t\t\t\t\t" << "Phone Number: " << bookings[i].phoneNum << endl;
+                            cout << "\t\t\t\t\t" << "Time        : "
+                                << generateTime(to_string(bookings[i].time)) << endl;
+                            cout << "\t\t\t\t\t" << "Court Number: " << bookings[i].courtNum << endl << endl;
+                        }
+                    }
+
+                } while (looping == 1);
+
+            }
+            else {
+                //if pwd = 1 then return to menu function
+                cout << "\t\t\t\t\t" << "Wrong password, please try again!" << endl;
+                cout << "\t\t\t\t\t" << "Enter password or Enter 1 to quit: ";
+                cin >> pwd;
+                system("cls");
+                if (pwd == "1") {
+                    return;
+                }
+
+            }
+
+        }
+    }
+}
+
+void writeFile(string fileName, int num) { //write customer's record into a txt file
+
+    ofstream MyWriteFile(fileName);
+    string name1;
+    string time1;
+    //use '#' to split data - > "name" , "phoneNumber", "time" , "courtNumber"
+    string order = "name#phoneNumber#time#courtNumber";
+    string order2 = "#name#phoneNumber#time#courtNumber";
+    bool first = true;
+
+    if (MyWriteFile.is_open()) {//check txt file can open or not
+
+        for (int i = 0; i < bookingCount; i++) {
+            if (num == bookings[i].day) {
+
+                if (first == true) {
+                    // if it is the first row, append name#phoneNumber#time#courtNumber\n
+                    //write first line data into txt file
+                    MyWriteFile << bookings[i].name << "#" << bookings[i].phoneNum << "#"
+                        << bookings[i].courtNum << "#" << bookings[i].time
+                        << endl;
+                    first = false;
+
+                }
+                else {
+                    // else append #name#phoneNumber#time#courtNumber\n
+                    //write second line data into txt file
+                    MyWriteFile << "#" << bookings[i].name << "#" << bookings[i].phoneNum
+                        << "#" << bookings[i].courtNum << "#" << bookings[i].time
+                        << endl;
+                }
+            }
+        }
+    }
+    MyWriteFile.close(); // close file
+}
+
+void readFile(string fileName, int num) { //read customer's record
+
+    ifstream MyReadFile(fileName);
+
+    string myText;
+    // Use a while loop together with the getline() function to read 
+    string token[4];
+    int i = 0;
+    int loopCount = 1;
+    int rowCount = 0;
+
+    string name;
+    string time;
+    int courtNum;
+    char firstCharacter;
+    int phoneNum = 0;
+
+    while (getline(MyReadFile, myText, '#')) {
+
+        token[i] = myText;
+        switch (i) {
+        case 0:
+            //display name
+            name = myText;
+            break;
+        case 1:
+            //display phone number 
+            phoneNum = stoi(myText);
+            break;
+        case 2:
+            //display time
+            time = myText;
+            break;
+        case 3:
+            // display court number 
+            firstCharacter = myText[0];
+            courtNum = int(firstCharacter) - 48;
+            break;
+        default:
+            break;
+        }
+        if (i == 3) {
+            //auto update array
+            updateNameData(num, searchTimeForIndex(time), courtNum - 1, name);
+            updatePhoneData(num, searchTimeForIndex(time), courtNum - 1, phoneNum);
+            array_court[num - 1][searchTimeForIndex(time)] = 1;
+
+            //sturcture
+            Booking booking;
+            booking.day = num;
+            booking.name = name;
+            booking.phoneNum = phoneNum;
+            booking.time = stoi(time);
+            booking.courtNum = courtNum;
+
+            //add into array
+            bookings[bookingIndex] = booking;
+            bookingIndex++;
+        }
+        i = (i + 1) % 4;
+    }
+
+    MyReadFile.close();
+    // Close the file
+    bookingCount = bookingIndex;
+}
